@@ -29,8 +29,11 @@ public class RedisInitializer {
         return args -> {
             try {
                 RedisConnection conn = connectionFactory.getConnection();
-                byte[] pong = conn.ping();
-                String pongStr = pong != null ? new String(pong, StandardCharsets.UTF_8) : "(no response)";
+
+                String pong = conn.ping();
+
+// Line 33: Simplified log (no need for new String(pong, ...))
+                String pongStr = (pong != null) ? pong : "(no response)";
                 logger.info("Redis PING response: {}", pongStr);
 
                 // seed a demo user if not present

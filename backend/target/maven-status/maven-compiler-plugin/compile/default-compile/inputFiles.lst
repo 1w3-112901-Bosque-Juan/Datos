@@ -1,12 +1,13 @@
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\controller\ProductController.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\controller\CartController.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\repository\ProductRepository.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\config\CorsConfig.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\service\ProductService.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\dto\LoginRequest.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\service\AuthService.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\controller\AuthController.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\BackendApplication.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\model\Product.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\dto\AuthResponse.java
-C:\Users\marco\Desktop\Estudio\Tecnicatura\3er cuatrimestre\Bases de datos 2\tp1\backend\src\main\java\com\example\tp1\config\RedisConfig.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\service\AuthService.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\controller\ProductController.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\controller\CartController.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\dto\AuthResponse.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\model\Product.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\dto\LoginRequest.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\BackendApplication.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\config\RedisInitializer.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\config\CorsConfig.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\repository\ProductRepository.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\controller\AuthController.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\config\RedisConfig.java
+C:\TUP\2do_anio\1erSem\bd2\TPI\1TPI\Datos\backend\src\main\java\com\example\tp1\service\ProductService.java

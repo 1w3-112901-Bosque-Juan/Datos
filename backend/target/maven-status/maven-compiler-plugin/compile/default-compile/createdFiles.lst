@@ -1,3 +1,4 @@
+com\example\tp1\config\RedisInitializer.class
 com\example\tp1\service\ProductService.class
 com\example\tp1\controller\CartController.class
 com\example\tp1\config\CorsConfig$1.class
