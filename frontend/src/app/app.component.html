@@ -10,59 +10,129 @@
 </div>
 
 <!-- Main Content -->
-<div
-  class="main-content"
-  [class.visible]="splashDone"
-  [class.ready]="!showSplash"
-  (click)="closeCartDropdown($event)"
->
+<div class="main-content" [class.visible]="splashDone" [class.ready]="!showSplash">
   <nav class="navbar">
     <div class="nav-brand">
-      <a routerLink="/login">Login</a>
-      <a routerLink="/catalog">Catálogo</a>
+      <img src="/assets/logo.png" alt="Logo" class="nav-logo" />
+      <img src="/assets/nombre.png" alt="Zenit Hardware" class="nav-name" />
     </div>
-    <div class="nav-cart">
-      <div class="cart-icon-wrapper" (click)="toggleCartDropdown()">
-        <svg class="cart-icon" viewBox="0 0 24 24" width="28" height="28">
-          <path
-            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
-            fill="currentColor"
-          />
-        </svg>
-        <span class="cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
-      </div>
-
-      <!-- Cart Dropdown -->
-      <div class="cart-dropdown" *ngIf="showCartDropdown">
-        <div class="cart-dropdown-header">
-          <h3>Mi Carrito</h3>
-          <span class="cart-item-count">{{ cartCount }} productos</span>
-        </div>
-        <div class="cart-dropdown-body">
-          <div class="empty-cart" *ngIf="cartItems.length === 0">Tu carrito está vacío</div>
-          <div class="cart-item" *ngFor="let item of cartItems">
-            <div class="cart-item-info">
-              <span class="cart-item-name">{{ item.name }}</span>
-              <span class="cart-item-qty">Cantidad: {{ item.quantity }}</span>
-            </div>
-            <button class="btn-remove" (click)="removeFromCart(item.productId)">Eliminar</button>
-          </div>
+    <div class="nav-actions">
+      <button class="nav-link" (click)="toggleLoginPanel()">Login</button>
+      <div class="nav-cart">
+        <div class="cart-icon-wrapper" (click)="toggleCartPanel()">
+          <svg class="cart-icon" viewBox="0 0 24 24" width="28" height="28">
+            <path
+              d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"
+              fill="currentColor"
+            />
+          </svg>
+          <span class="cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
         </div>
       </div>
     </div>
   </nav>
 
-  <header class="hero">
-    <div class="hero-content">
-      <div class="hero-brand">
-        <img src="/assets/logo.png" alt="Logo" class="hero-logo-img" />
-        <img src="/assets/nombre.png" alt="Zenit Hardware" class="hero-name-img" />
+  <!-- Cart Panel -->
+  <div class="cart-panel" [class.open]="showCartPanel">
+    <div class="cart-panel-content">
+      <div class="cart-panel-header">
+        <h2>Mi Carrito</h2>
+        <button class="close-btn" (click)="closeCartPanel()">×</button>
       </div>
-      <p class="hero-subtitle">Tu tienda de tecnología favorita</p>
+      <span class="cart-item-count">{{ cartCount }} productos</span>
+      <div class="cart-panel-body">
+        <div class="empty-cart" *ngIf="cartItems.length === 0">Tu carrito está vacío</div>
+        <div class="cart-item" *ngFor="let item of cartItems">
+          <div class="cart-item-info">
+            <span class="cart-item-name">{{ item.name }}</span>
+            <span class="cart-item-qty">Cantidad: {{ item.quantity }}</span>
+          </div>
+          <button class="btn-remove" (click)="removeFromCart(item.productId)">Eliminar</button>
+        </div>
+      </div>
     </div>
-  </header>
+  </div>
 
-  <main style="padding: 2rem">
-    <router-outlet (activate)="refreshCart()"></router-outlet>
-  </main>
+  <!-- Login Panel -->
+  <div class="login-panel" [class.open]="showLoginPanel">
+    <div class="login-panel-content">
+      <button class="close-btn" (click)="closeLoginPanel()">×</button>
+      <h2>Iniciar Sesión</h2>
+      <form (submit)="onLoginSubmit()">
+        <div class="form-group">
+          <label>Usuario</label>
+          <input type="text" [(ngModel)]="username" name="username" required />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" [(ngModel)]="password" name="password" required />
+        </div>
+        <div class="login-error" *ngIf="loginError">{{ loginError }}</div>
+        <button type="submit" class="btn-login">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Message -->
+  <div
+    class="floating-message"
+    [class.show]="showLoginMessage"
+    [class.success]="loginMessage.includes('agregado')"
+  >
+    <span>{{ loginMessage }}</span>
+    <button class="msg-close" (click)="closeMessage()">×</button>
+  </div>
+
+  <!-- Banner Carousel -->
+  <div class="carousel">
+    <div class="carousel-slide" [class.active]="currentBanner === 0">
+      <img src="/assets/banner1.png" alt="Banner 1" class="carousel-image" />
+    </div>
+    <div class="carousel-slide" [class.active]="currentBanner === 1">
+      <img src="/assets/banner2.png" alt="Banner 2" class="carousel-image" />
+    </div>
+    <button class="carousel-btn carousel-btn-left" (click)="prevBanner()">
+      <svg viewBox="0 0 24 24" width="30" height="30">
+        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
+      </svg>
+    </button>
+    <button class="carousel-btn carousel-btn-right" (click)="nextBanner()">
+      <svg viewBox="0 0 24 24" width="30" height="30">
+        <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" fill="currentColor" />
+      </svg>
+    </button>
+    <div class="carousel-dots">
+      <span class="dot" [class.active]="currentBanner === 0" (click)="goToBanner(0)"></span>
+      <span class="dot" [class.active]="currentBanner === 1" (click)="goToBanner(1)"></span>
+    </div>
+  </div>
+
+  <!-- Products Grid -->
+  <div class="products-section">
+    <div *ngIf="initialLoad" class="loading">Cargando productos...</div>
+
+    <ng-container *ngIf="!initialLoad">
+      <div *ngIf="products.length === 0" class="empty-state">No hay productos disponibles</div>
+
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let p of products">
+          <div class="card-header">
+            <span class="product-type">{{ p.type }}</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ p.name }}</h3>
+            <p class="price">${{ p.price }}</p>
+            <div class="attributes" *ngIf="p.attributes">
+              <span *ngFor="let attr of getAttributeKeys(p.attributes)" class="attr-tag">
+                {{ attr }}: {{ p.attributes[attr] }}
+              </span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button class="btn-add" (click)="addToCart(p.id)">Agregar al carrito</button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
 </div>

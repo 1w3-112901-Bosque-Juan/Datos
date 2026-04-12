@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { CartService } from './services/cart.service';
 import { CartStateService } from './services/cart-state.service';
 import { ProductService } from './services/product.service';
+import { AuthService } from './services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -14,17 +17,30 @@ export class AppComponent implements OnInit, OnDestroy {
   splashDone = false;
   cartCount = 0;
   showCartDropdown = false;
+  showCartPanel = false;
+  showLoginPanel = false;
   cartItems: any[] = [];
   products: any[] = [];
   scrollY = 0;
+  currentBanner = 0;
+  showLoginMessage = false;
+  loginMessage = '';
+  username = '';
+  password = '';
+  loginError = '';
+  initialLoad = true;
   private subscription!: Subscription;
   private scrollListener!: () => void;
+  private bannerInterval: any;
+  private loginMessageTimeout: any;
 
   constructor(
     private cdr: ChangeDetectorRef,
     private cartService: CartService,
     private cartState: CartStateService,
     private productService: ProductService,
+    private authService: AuthService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -48,6 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.showSplash = false;
         this.cdr.detectChanges();
         this.loadCartCount();
+        this.startBannerAutoPlay();
       }, 1000);
     }, 2000);
   }
@@ -59,6 +76,33 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.scrollListener) {
       window.removeEventListener('scroll', this.scrollListener);
     }
+    if (this.bannerInterval) {
+      clearInterval(this.bannerInterval);
+    }
+    if (this.loginMessageTimeout) {
+      clearTimeout(this.loginMessageTimeout);
+    }
+  }
+
+  startBannerAutoPlay() {
+    this.bannerInterval = setInterval(() => {
+      this.nextBanner();
+    }, 5000);
+  }
+
+  nextBanner() {
+    this.currentBanner = (this.currentBanner + 1) % 2;
+    this.cdr.detectChanges();
+  }
+
+  prevBanner() {
+    this.currentBanner = (this.currentBanner - 1 + 2) % 2;
+    this.cdr.detectChanges();
+  }
+
+  goToBanner(index: number) {
+    this.currentBanner = index;
+    this.cdr.detectChanges();
   }
 
   updateBackground() {
@@ -79,11 +123,17 @@ export class AppComponent implements OnInit, OnDestroy {
     this.productService.listWithToken(token).subscribe({
       next: (res: any) => {
         this.products = res;
+        this.initialLoad = false;
       },
       error: () => {
         this.products = [];
+        this.initialLoad = false;
       },
     });
+  }
+
+  getAttributeKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
   }
 
   getProductName(productId: string): string {
@@ -114,6 +164,19 @@ export class AppComponent implements OnInit, OnDestroy {
     if (token) {
       this.cartService.refreshCartCount(token);
     }
+  }
+
+  toggleCartPanel() {
+    this.showCartPanel = !this.showCartPanel;
+    if (this.showCartPanel) {
+      this.loadCartItems();
+    }
+    this.cdr.detectChanges();
+  }
+
+  closeCartPanel() {
+    this.showCartPanel = false;
+    this.cdr.detectChanges();
   }
 
   toggleCartDropdown() {
@@ -171,5 +234,85 @@ export class AppComponent implements OnInit, OnDestroy {
       this.showCartDropdown = false;
       this.cdr.detectChanges();
     }
+  }
+
+  toggleLoginPanel() {
+    this.showLoginPanel = !this.showLoginPanel;
+    this.loginError = '';
+    this.cdr.detectChanges();
+  }
+
+  closeLoginPanel() {
+    this.showLoginPanel = false;
+    this.loginError = '';
+    this.cdr.detectChanges();
+  }
+
+  async onLoginSubmit() {
+    this.loginError = '';
+    try {
+      const res: any = await this.authService.login(this.username, this.password);
+      if (res && res.authenticated) {
+        this.showLoginPanel = false;
+        this.username = '';
+        this.password = '';
+        this.loadCartCount();
+        this.cdr.detectChanges();
+      } else {
+        this.loginError = 'Credenciales inválidas';
+        this.cdr.detectChanges();
+      }
+    } catch (err) {
+      this.loginError = 'Error en login';
+      this.cdr.detectChanges();
+    }
+  }
+
+  addToCart(productId: string) {
+    const token = localStorage.getItem('sessionToken');
+    if (!token) {
+      this.loginMessage = 'Debes iniciar sesión para agregar al carrito';
+      this.showLoginMessage = true;
+      if (this.loginMessageTimeout) {
+        clearTimeout(this.loginMessageTimeout);
+      }
+      this.loginMessageTimeout = setTimeout(() => {
+        this.showLoginMessage = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.cartService.addToCart(token, productId, 1).subscribe({
+      next: () => {
+        this.loginMessage = 'Producto agregado al carrito';
+        this.showLoginMessage = true;
+        this.cartService.refreshCartCount(token);
+        if (this.loginMessageTimeout) {
+          clearTimeout(this.loginMessageTimeout);
+        }
+        this.loginMessageTimeout = setTimeout(() => {
+          this.showLoginMessage = false;
+          this.cdr.detectChanges();
+        }, 2000);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.loginMessage = 'Error al agregar al carrito';
+        this.showLoginMessage = true;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('sessionToken');
+  }
+
+  closeMessage() {
+    this.showLoginMessage = false;
+    this.cdr.detectChanges();
   }
 }

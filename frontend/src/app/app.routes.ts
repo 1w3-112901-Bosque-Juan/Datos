@@ -3,7 +3,7 @@ import { LoginComponent } from './components/login.component';
 import { CatalogComponent } from './components/catalog.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '', redirectTo: 'catalog', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-  { path: 'catalog', component: CatalogComponent }
+  { path: 'catalog', component: CatalogComponent },
 ];
