@@ -1,22 +1,10 @@
 <!-- Splash Screen -->
 <div class="splash-screen" [class.shrink]="splashDone" [class.hidden]="!showSplash">
   <div class="splash-content" [class.fade-out]="splashDone">
-    <svg class="splash-logo" viewBox="0 0 64 64" width="150" height="150">
-      <rect
-        x="8"
-        y="12"
-        width="48"
-        height="32"
-        rx="2"
-        fill="#fff"
-        stroke="#1a73e8"
-        stroke-width="2"
-      />
-      <rect x="12" y="16" width="40" height="24" fill="#e3f2fd" />
-      <path d="M4 44 L60 44 L56 50 L8 50 Z" fill="#1a73e8" />
-      <rect x="28" y="50" width="8" height="4" fill="#0d47a1" />
-    </svg>
-    <h1 class="splash-title">TechStore</h1>
+    <div class="brand-container">
+      <img src="/assets/logo.png" alt="Logo" class="brand-logo" />
+      <img src="/assets/nombre.png" alt="Zenit Hardware" class="brand-name" />
+    </div>
     <p class="splash-subtitle">Tu tienda de tecnología favorita</p>
   </div>
 </div>
@@ -66,27 +54,11 @@
 
   <header class="hero">
     <div class="hero-content">
-      <div class="hero-text">
-        <h1>TechStore</h1>
-        <p>Tu tienda de tecnología favorita</p>
+      <div class="hero-brand">
+        <img src="/assets/logo.png" alt="Logo" class="hero-logo-img" />
+        <img src="/assets/nombre.png" alt="Zenit Hardware" class="hero-name-img" />
       </div>
-      <div class="hero-image">
-        <svg viewBox="0 0 64 64" width="120" height="120">
-          <rect
-            x="8"
-            y="12"
-            width="48"
-            height="32"
-            rx="2"
-            fill="#fff"
-            stroke="#1a73e8"
-            stroke-width="2"
-          />
-          <rect x="12" y="16" width="40" height="24" fill="#e3f2fd" />
-          <path d="M4 44 L60 44 L56 50 L8 50 Z" fill="#1a73e8" />
-          <rect x="28" y="50" width="8" height="4" fill="#0d47a1" />
-        </svg>
-      </div>
+      <p class="hero-subtitle">Tu tienda de tecnología favorita</p>
     </div>
   </header>
 

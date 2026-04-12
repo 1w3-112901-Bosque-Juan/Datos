@@ -16,7 +16,9 @@ export class AppComponent implements OnInit, OnDestroy {
   showCartDropdown = false;
   cartItems: any[] = [];
   products: any[] = [];
+  scrollY = 0;
   private subscription!: Subscription;
+  private scrollListener!: () => void;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -33,6 +35,12 @@ export class AppComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
+    this.scrollListener = () => {
+      this.scrollY = window.scrollY;
+      this.updateBackground();
+    };
+    window.addEventListener('scroll', this.scrollListener);
+
     setTimeout(() => {
       this.splashDone = true;
       this.cdr.detectChanges();
@@ -48,6 +56,22 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+  }
+
+  updateBackground() {
+    const scrollPercent = Math.min(this.scrollY / 500, 1);
+    const hue1 = 220 - scrollPercent * 40;
+    const hue2 = 260 + scrollPercent * 60;
+    const hue3 = 320 - scrollPercent * 40;
+    const hue4 = 200 + scrollPercent * 60;
+    document.body.style.background = `linear-gradient(180deg, 
+      hsl(${hue1}, 70%, 15%) 0%, 
+      hsl(${hue2}, 60%, 20%) 35%, 
+      hsl(${hue3}, 50%, 25%) 65%, 
+      hsl(${hue4}, 60%, 15%) 100%)`;
   }
 
   loadProducts() {
