@@ -50,4 +50,21 @@ public class CartController {
         redisTemplate.delete("cart:" + username);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Map<String, Integer>> removeFromCart(
+            @RequestHeader("X-Session-Token") String token,
+            @PathVariable String productId) throws Exception {
+        String username = redisTemplate.opsForValue().get("session:" + token);
+        if (username == null) return ResponseEntity.status(401).build();
+
+        String key = "cart:" + username;
+        String raw = redisTemplate.opsForValue().get(key);
+        if (raw == null) return ResponseEntity.ok(new HashMap<>());
+
+        Map<String, Integer> cart = mapper.readValue(raw, new TypeReference<Map<String,Integer>>(){});
+        cart.remove(productId);
+        redisTemplate.opsForValue().set(key, mapper.writeValueAsString(cart));
+        return ResponseEntity.ok(cart);
+    }
 }

@@ -8,15 +8,15 @@ import { LoginComponent } from './components/login.component';
 import { CatalogComponent } from './components/catalog.component';
 
 const routes: Routes = [
-    { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: 'login', component: LoginComponent },
-    { path: 'catalog', component: CatalogComponent }
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'catalog', component: CatalogComponent },
 ];
 
 @NgModule({
-    declarations: [AppComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, RouterModule.forRoot(routes), LoginComponent, CatalogComponent],
-    providers: [],
-    bootstrap: [AppComponent]
+  declarations: [AppComponent, LoginComponent, CatalogComponent],
+  imports: [BrowserModule, HttpClientModule, FormsModule, RouterModule.forRoot(routes)],
+  providers: [],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

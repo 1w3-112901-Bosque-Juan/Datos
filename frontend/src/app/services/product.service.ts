@@ -6,9 +6,13 @@ import { AuthService } from './auth.service';
 export class ProductService {
   constructor(private api: ApiService, private auth: AuthService) {}
 
-  // Agregamos el ?? undefined en las tres líneas
+  
   list() {
     return this.api.get('/products', this.auth.getToken() ?? undefined);
+  }
+
+  listWithToken(token: string | undefined) {
+    return this.api.get('/products', token);
   }
 
   get(id: string) {

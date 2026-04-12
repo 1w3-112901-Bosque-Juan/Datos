@@ -1,31 +1,34 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  standalone: false,
   template: `
     <div style="max-width:400px;margin:auto;padding:2rem">
       <h2>Login</h2>
       <form (submit)="onSubmit($event)">
-        <div><label>Usuario</label><input name="username" [(ngModel)]="username"></div>
-        <div><label>Password</label><input name="password" type="password" [(ngModel)]="password"></div>
+        <div><label>Usuario</label><input name="username" [(ngModel)]="username" /></div>
+        <div>
+          <label>Password</label><input name="password" type="password" [(ngModel)]="password" />
+        </div>
         <button type="submit">Entrar</button>
       </form>
-      <div *ngIf="error" style="color:red">{{error}}</div>
+      <div *ngIf="error" style="color:red">{{ error }}</div>
     </div>
-  `
+  `,
 })
 export class LoginComponent {
   username = '';
   password = '';
   error = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+  ) {}
 
   async onSubmit(e: Event) {
     e.preventDefault();
@@ -36,6 +39,8 @@ export class LoginComponent {
       } else {
         this.error = 'Credenciales inválidas';
       }
-    } catch (err) { this.error = 'Error en login'; }
+    } catch (err) {
+      this.error = 'Error en login';
+    }
   }
 }

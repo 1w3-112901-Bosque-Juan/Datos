@@ -1,0 +1,29 @@
+<div class="catalog-container">
+  <div *ngIf="initialLoad" class="loading">
+    <span>Cargando productos...</span>
+  </div>
+
+  <ng-container *ngIf="!initialLoad">
+    <div *ngIf="products.length === 0" class="empty-state">No hay productos disponibles</div>
+
+    <div class="products-grid">
+      <div class="product-card" *ngFor="let p of products">
+        <div class="card-header">
+          <span class="product-type">{{ p.type }}</span>
+        </div>
+        <div class="card-body">
+          <h3>{{ p.name }}</h3>
+          <p class="price">${{ p.price }}</p>
+          <div class="attributes" *ngIf="p.attributes">
+            <span *ngFor="let attr of getAttributeKeys(p.attributes)" class="attr-tag">
+              {{ attr }}: {{ p.attributes[attr] }}
+            </span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-add" (click)="addToCart(p.id)">Agregar al carrito</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

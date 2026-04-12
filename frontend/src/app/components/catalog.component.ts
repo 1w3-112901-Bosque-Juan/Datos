@@ -1,54 +1,65 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ProductService } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
+import { CartService } from '../services/cart.service';
 
 @Component({
   selector: 'app-catalog',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div style="padding:1rem">
-      <h2>Catálogo</h2>
-      <div *ngIf="products.length === 0">No hay productos</div>
-      <div *ngFor="let p of products" style="border:1px solid #ddd;padding:8px;margin:8px 0;">
-        <strong>{{p.name}}</strong> - {{p.type}} - \${{p.price}}
-        <div *ngIf="p.attributes">Atributos: {{p.attributes | json}}</div>
-        <button (click)="addToCart(p.id)">Agregar al carrito</button>
-      </div>
-    </div>
-  `
+  standalone: false,
+  templateUrl: './catalog.component.html',
+  styleUrls: ['./catalog.component.css'],
 })
 export class CatalogComponent implements OnInit {
   products: any[] = [];
+  initialLoad = true;
 
-  constructor(private svc: ProductService, private auth: AuthService) {}
+  constructor(
+    private svc: ProductService,
+    private auth: AuthService,
+    private cartService: CartService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.load();
   }
 
-  load() {
-    this.svc.list().subscribe({
-      next: (res: any) => this.products = res,
-      error: (err) => console.error(err)
+  getAttributeKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+
+  private load() {
+    const token = localStorage.getItem('sessionToken') ?? undefined;
+
+    this.svc.listWithToken(token).subscribe({
+      next: (res: any) => {
+        this.products = res;
+        this.initialLoad = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.initialLoad = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
   addToCart(productId: string) {
-    const token = this.auth.getToken();
-    if (!token) { alert('Necesita loguearse'); return; }
+    const token = localStorage.getItem('sessionToken');
+    if (!token) {
+      alert('Necesita loguearse');
+      return;
+    }
 
-    fetch('http://localhost:8080/api/cart', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Session-Token': token
+    this.cartService.addToCart(token, productId, 1).subscribe({
+      next: () => {
+        this.cartService.refreshCartCount(token);
       },
-      body: JSON.stringify({ [productId]: 1 })
-    })
-      .then(r => r.json())
-      .then(() => alert('Agregado al carrito'))
-      .catch(err => console.error(err));
+      error: (err) => {
+        console.error(err);
+        alert('Error al agregar al carrito');
+      },
+    });
   }
 }
