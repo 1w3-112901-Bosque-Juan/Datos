@@ -25,6 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
   currentBanner = 0;
   showLoginMessage = false;
   loginMessage = '';
+  pendingProductId: string | null = null;
   username = '';
   password = '';
   loginError = '';
@@ -123,6 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.productService.listWithToken(token).subscribe({
       next: (res: any) => {
         this.products = res;
+        console.log('Productos cargados:', this.products);
         this.initialLoad = false;
       },
       error: () => {
@@ -256,6 +258,27 @@ export class AppComponent implements OnInit, OnDestroy {
         this.showLoginPanel = false;
         this.username = '';
         this.password = '';
+
+        if (this.pendingProductId) {
+          const token = localStorage.getItem('sessionToken');
+          if (token) {
+            this.cartService.addToCart(token, this.pendingProductId, 1).subscribe({
+              next: () => {
+                this.loginMessage = 'Producto agregado al carrito';
+                this.showLoginMessage = true;
+                this.cartService.refreshCartCount(token);
+                this.pendingProductId = null;
+                if (this.loginMessageTimeout) clearTimeout(this.loginMessageTimeout);
+                this.loginMessageTimeout = setTimeout(() => {
+                  this.showLoginMessage = false;
+                  this.cdr.detectChanges();
+                }, 2000);
+                this.cdr.detectChanges();
+              },
+            });
+          }
+        }
+
         this.loadCartCount();
         this.cdr.detectChanges();
       } else {
@@ -270,16 +293,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   addToCart(productId: string) {
     const token = localStorage.getItem('sessionToken');
-    if (!token) {
-      this.loginMessage = 'Debes iniciar sesión para agregar al carrito';
-      this.showLoginMessage = true;
-      if (this.loginMessageTimeout) {
-        clearTimeout(this.loginMessageTimeout);
-      }
-      this.loginMessageTimeout = setTimeout(() => {
-        this.showLoginMessage = false;
-        this.cdr.detectChanges();
-      }, 3000);
+
+    if (!token || token === 'null' || token === 'undefined') {
+      window.alert('Debes iniciar sesión para añadir al carrito');
+      this.showLoginPanel = true;
+      this.pendingProductId = productId;
       this.cdr.detectChanges();
       return;
     }
@@ -289,9 +307,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.loginMessage = 'Producto agregado al carrito';
         this.showLoginMessage = true;
         this.cartService.refreshCartCount(token);
-        if (this.loginMessageTimeout) {
-          clearTimeout(this.loginMessageTimeout);
-        }
+        if (this.loginMessageTimeout) clearTimeout(this.loginMessageTimeout);
         this.loginMessageTimeout = setTimeout(() => {
           this.showLoginMessage = false;
           this.cdr.detectChanges();
@@ -299,10 +315,14 @@ export class AppComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error(err);
-        this.loginMessage = 'Error al agregar al carrito';
-        this.showLoginMessage = true;
-        this.cdr.detectChanges();
+        if (err.status === 401) {
+          localStorage.removeItem('sessionToken');
+          localStorage.removeItem('username');
+          window.alert('Tu sesión ha expirado. Debes iniciar sesión nuevamente.');
+          this.showLoginPanel = true;
+          this.pendingProductId = productId;
+          this.cdr.detectChanges();
+        }
       },
     });
   }

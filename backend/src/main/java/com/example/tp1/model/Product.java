@@ -13,6 +13,7 @@ public class Product {
     private String name;
     private String type; // monitor, teclado, procesador, etc.
     private Double price;
+    private String image;
     private Map<String, Object> attributes; // flexible schema fields
 
     public Product() {}
@@ -25,6 +26,8 @@ public class Product {
     public void setType(String type) { this.type = type; }
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
     public Map<String, Object> getAttributes() { return attributes; }
     public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
 }
