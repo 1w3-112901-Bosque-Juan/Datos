@@ -273,6 +273,83 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.nav-user {
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+/* Make nav-user stand out on the gradient background */
+.nav-user {
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+/* Logout confirmation modal */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30000; /* raised to ensure overlay sits above other contexts */
+}
+
+.confirm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  max-width: calc(100% - 40px);
+  background: linear-gradient(180deg, #1a1a3e, #0f0c29);
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  color: white;
+  text-align: left;
+  z-index: 30001; /* ensure modal sits above overlay */
+}
+
+.confirm-modal h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+}
+
+.confirm-modal p {
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 1rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: white;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm:hover, .btn-cancel:hover { opacity: 0.92; }
+
 .nav-cart {
   position: relative;
   display: flex;
@@ -420,6 +497,30 @@ body {
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* highlight animation for newly added items */
+.cart-item.highlight {
+  animation: addedHighlight 0.9s ease-out;
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.12);
+  border: 1px solid rgba(26,115,232,0.35);
+  background: linear-gradient(90deg, rgba(26,115,232,0.06), rgba(255,255,255,0.02));
+}
+
+@keyframes addedHighlight {
+  0% {
+    transform: translateY(-6px) scale(0.995);
+    opacity: 0;
+    box-shadow: 0 2px 6px rgba(26,115,232,0.08);
+  }
+  40% {
+    transform: translateY(0) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
 .cart-item-info {
   display: flex;
   flex-direction: column;
@@ -457,6 +558,30 @@ body {
 .btn-remove:hover {
   background: #e53935;
   color: white;
+}
+
+/* Footer area in cart panel */
+.cart-panel-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: center;
+}
+
+.btn-fab {
+  background: linear-gradient(135deg, #1a73e8, #0d47a1);
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(10,25,70,0.45);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-fab:hover {
+  transform: translateY(-2px);
 }
 
 /* Carousel */

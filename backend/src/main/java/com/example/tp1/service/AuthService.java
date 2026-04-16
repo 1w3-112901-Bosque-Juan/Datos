@@ -30,4 +30,10 @@ public class AuthService {
         if (token == null) return null;
         return redisTemplate.opsForValue().get(String.format("session:%s", token));
     }
+
+    public void logout(String token) {
+        if (token == null) return;
+        String sessionKey = String.format("session:%s", token);
+        redisTemplate.delete(sessionKey);
+    }
 }

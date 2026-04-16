@@ -2,8 +2,8 @@
 <div class="splash-screen" [class.shrink]="splashDone" [class.hidden]="!showSplash">
   <div class="splash-content" [class.fade-out]="splashDone">
     <div class="brand-container">
-      <img src="/assets/logo.png" alt="Logo" class="brand-logo" />
-      <img src="/assets/nombre.png" alt="Zenit Hardware" class="brand-name" />
+      <img src="assets/logo.png" alt="Logo" class="brand-logo" (error)="imageFallback($event)" />
+      <img src="assets/nombre.png" alt="Zenit Hardware" class="brand-name" (error)="imageFallback($event)" />
     </div>
     <p class="splash-subtitle">Tu tienda de tecnología favorita</p>
   </div>
@@ -12,12 +12,22 @@
 <!-- Fixed Navbar -->
 <nav class="navbar">
   <div class="nav-brand">
-    <img src="/assets/logo.png" alt="Logo" class="nav-logo" />
-    <img src="/assets/nombre.png" alt="Zenit Hardware" class="nav-name" />
+    <img src="assets/logo.png" alt="Logo" class="nav-logo" (error)="imageFallback($event)" />
+    <img src="assets/nombre.png" alt="Zenit Hardware" class="nav-name" (error)="imageFallback($event)" />
   </div>
   <div class="nav-actions">
-    <button class="nav-link" (click)="toggleLoginPanel()">Login</button>
-    <div class="nav-cart">
+    <!-- Show Login if not logged, otherwise show username + Logout -->
+    <ng-container *ngIf="!isLoggedIn(); else loggedTpl">
+      <button type="button" class="nav-link" (click)="$event.stopPropagation(); toggleLoginPanel()">Login</button>
+    </ng-container>
+
+    <ng-template #loggedTpl>
+      <span class="nav-user">Hola, {{ currentUser }}</span>
+      <button #btnLogout id="btn-logout" type="button" class="nav-link" (click)="$event.stopPropagation(); showLogoutConfirm = true">Logout</button>
+    </ng-template>
+
+    <!-- Show cart only if logged in -->
+    <div class="nav-cart" *ngIf="isLoggedIn()">
       <div class="cart-icon-wrapper" (click)="toggleCartPanel()">
         <svg class="cart-icon" viewBox="0 0 24 24" width="28" height="28">
           <path
@@ -39,14 +49,18 @@
       <button class="close-btn" (click)="closeCartPanel()">×</button>
     </div>
     <span class="cart-item-count">{{ cartCount }} productos</span>
-    <div class="cart-panel-body">
-      <div class="empty-cart" *ngIf="cartItems.length === 0">Tu carrito está vacío</div>
-      <div class="cart-item" *ngFor="let item of cartItems">
+      <div class="cart-panel-body">
+        <div class="empty-cart" *ngIf="cartItems.length === 0">Tu carrito está vacío</div>
+      <div class="cart-item" *ngFor="let item of cartItems" [class.highlight]="recentlyAdded[item.productId]">
         <div class="cart-item-info">
           <span class="cart-item-name">{{ item.name }}</span>
           <span class="cart-item-qty">Cantidad: {{ item.quantity }}</span>
         </div>
         <button class="btn-remove" (click)="removeFromCart(item.productId)">Eliminar</button>
+      </div>
+      <!-- Footer area with action button -->
+      <div class="cart-panel-footer">
+        <button class="btn-fab" (click)="$event.stopPropagation(); showComingSoon = true">Comprar</button>
       </div>
     </div>
   </div>
@@ -84,14 +98,14 @@
 </div>
 
 <!-- Main Content -->
-<div class="main-content" [class.visible]="splashDone" [class.ready]="!showSplash">
+  <div class="main-content" [class.visible]="splashDone" [class.ready]="!showSplash">
   <!-- Banner Carousel -->
   <div class="carousel">
     <div class="carousel-slide" [class.active]="currentBanner === 0">
-      <img src="/assets/banner1.png" alt="Banner 1" class="carousel-image" />
+      <img src="assets/banner1.png" alt="Banner 1" class="carousel-image" (error)="imageFallback($event)" />
     </div>
     <div class="carousel-slide" [class.active]="currentBanner === 1">
-      <img src="/assets/banner2.png" alt="Banner 2" class="carousel-image" />
+      <img src="assets/banner2.png" alt="Banner 2" class="carousel-image" (error)="imageFallback($event)" />
     </div>
     <button class="carousel-btn carousel-btn-left" (click)="prevBanner()">
       <svg viewBox="0 0 24 24" width="30" height="30">
@@ -109,6 +123,7 @@
     </div>
   </div>
 
+
   <!-- Products Grid -->
   <div class="products-section">
     <div *ngIf="initialLoad" class="loading">Cargando productos...</div>
@@ -122,7 +137,7 @@
             <span class="product-type">{{ p.type }}</span>
           </div>
           <div class="card-body">
-            <img *ngIf="p.image" [src]="p.image" [alt]="p.name" class="product-image" />
+            <img [src]="p.image || placeholderDataUri" [alt]="p.name" class="product-image" (error)="imageFallback($event)" />
             <h3>{{ p.name }}</h3>
             <p class="price">USD $ {{ p.price }}</p>
             <div class="attributes" *ngIf="p.attributes">
@@ -137,5 +152,28 @@
         </div>
       </div>
     </ng-container>
+  </div>
+</div>
+
+<!-- Logout Confirmation Modal (moved outside main-content to avoid stacking context issues) -->
+<div class="confirm-overlay" *ngIf="showLogoutConfirm">
+  <div class="confirm-modal">
+    <h3>¿Cerrar sesión?</h3>
+    <p>Estás por cerrar sesión. El carrito permanecerá guardado en tu cuenta.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn-cancel" (click)="$event.stopPropagation(); closeLogoutConfirm()">Cancelar</button>
+      <button type="button" class="btn-confirm" (click)="$event.stopPropagation(); confirmLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coming Soon Modal -->
+<div class="confirm-overlay" *ngIf="showComingSoon">
+  <div class="confirm-modal">
+    <h3>En construcción</h3>
+    <p>Esta función está en construcción. Vuelve pronto para más novedades.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn-cancel" (click)="$event.stopPropagation(); showComingSoon = false">Cerrar</button>
+    </div>
   </div>
 </div>

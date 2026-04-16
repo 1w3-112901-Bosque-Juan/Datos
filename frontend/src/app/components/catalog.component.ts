@@ -29,7 +29,7 @@ export class CatalogComponent implements OnInit {
   }
 
   private load() {
-    const token = localStorage.getItem('sessionToken') ?? undefined;
+    const token = this.auth.getToken() ?? undefined;
 
     this.svc.listWithToken(token).subscribe({
       next: (res: any) => {
@@ -46,7 +46,7 @@ export class CatalogComponent implements OnInit {
   }
 
   addToCart(productId: string) {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.auth.getToken();
     if (!token) {
       alert('Necesita loguearse');
       return;
