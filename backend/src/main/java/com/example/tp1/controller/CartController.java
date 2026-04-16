@@ -1,7 +1,7 @@
 package com.example.tp1.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.tp1.model.Cart;
+import com.example.tp1.repository.CartRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,18 +15,21 @@ import java.util.Map;
 @RequestMapping("/api/cart")
 public class CartController {
     private final RedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final CartRepository cartRepository;
 
-    public CartController(RedisTemplate<String, String> redisTemplate) { this.redisTemplate = redisTemplate; }
+    public CartController(RedisTemplate<String, String> redisTemplate, CartRepository cartRepository) {
+        this.redisTemplate = redisTemplate;
+        this.cartRepository = cartRepository;
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Integer>> getCart(@RequestHeader(name = "X-Session-Token") String token) throws Exception {
         String username = redisTemplate.opsForValue().get("session:" + token);
         if (username == null) return ResponseEntity.status(401).build();
-        String raw = redisTemplate.opsForValue().get("cart:" + username);
-        if (raw == null) return ResponseEntity.ok(new HashMap<>());
-        Map<String, Integer> cart = mapper.readValue(raw, new TypeReference<Map<String,Integer>>(){});
-        return ResponseEntity.ok(cart);
+
+        return cartRepository.findByUsername(username)
+                .map(c -> ResponseEntity.ok(c.getItems()))
+                .orElse(ResponseEntity.ok(new HashMap<>()));
     }
 
     @PostMapping
@@ -35,19 +38,21 @@ public class CartController {
         // item: { productId: quantity }
         String username = redisTemplate.opsForValue().get("session:" + token);
         if (username == null) return ResponseEntity.status(401).build();
-        String key = "cart:" + username;
-        String raw = redisTemplate.opsForValue().get(key);
-        Map<String, Integer> cart = raw == null ? new HashMap<>() : mapper.readValue(raw, new TypeReference<Map<String,Integer>>(){});
-        item.forEach((k,v) -> cart.merge(k, v, Integer::sum));
-        redisTemplate.opsForValue().set(key, mapper.writeValueAsString(cart));
-        return ResponseEntity.ok(cart);
+
+        Cart cart = cartRepository.findByUsername(username).orElseGet(() -> new Cart(username));
+        Map<String, Integer> items = cart.getItems();
+        item.forEach((k, v) -> items.merge(k, v, Integer::sum));
+        cart.setItems(items);
+        cartRepository.save(cart);
+        return ResponseEntity.ok(cart.getItems());
     }
 
     @DeleteMapping
     public ResponseEntity<Void> clear(@RequestHeader(name = "X-Session-Token") String token) {
         String username = redisTemplate.opsForValue().get("session:" + token);
         if (username == null) return ResponseEntity.status(401).build();
-        redisTemplate.delete("cart:" + username);
+
+        cartRepository.deleteByUsername(username);
         return ResponseEntity.noContent().build();
     }
 
@@ -58,13 +63,13 @@ public class CartController {
         String username = redisTemplate.opsForValue().get("session:" + token);
         if (username == null) return ResponseEntity.status(401).build();
 
-        String key = "cart:" + username;
-        String raw = redisTemplate.opsForValue().get(key);
-        if (raw == null) return ResponseEntity.ok(new HashMap<>());
+        Cart cart = cartRepository.findByUsername(username).orElse(null);
+        if (cart == null) return ResponseEntity.ok(new HashMap<>());
 
-        Map<String, Integer> cart = mapper.readValue(raw, new TypeReference<Map<String,Integer>>(){});
-        cart.remove(productId);
-        redisTemplate.opsForValue().set(key, mapper.writeValueAsString(cart));
-        return ResponseEntity.ok(cart);
+        Map<String, Integer> items = cart.getItems();
+        items.remove(productId);
+        cart.setItems(items);
+        cartRepository.save(cart);
+        return ResponseEntity.ok(cart.getItems());
     }
 }

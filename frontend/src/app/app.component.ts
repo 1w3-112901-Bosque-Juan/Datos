@@ -19,15 +19,21 @@ export class AppComponent implements OnInit, OnDestroy {
   showCartDropdown = false;
   showCartPanel = false;
   showLoginPanel = false;
+  showRegisterPanel = false;
   cartItems: any[] = [];
+  // track recently added items to animate highlight in the open cart
+  recentlyAdded: { [productId: string]: boolean } = {};
+  private prevCartMap: { [key: string]: number } | null = null;
   products: any[] = [];
   scrollY = 0;
   currentBanner = 0;
   showLoginMessage = false;
   loginMessage = '';
   pendingProductId: string | null = null;
+  // username is used for the login form; currentUser holds the logged-in name
   username = '';
   password = '';
+  currentUser: string | null = null;
   loginError = '';
   initialLoad = true;
   private subscription!: Subscription;
@@ -44,12 +50,59 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
   ) {}
 
+  // For debugging: attach a DOM listener to the logout button after view init
+  ngAfterViewInit(): void {
+    try {
+      const btn = document.getElementById('btn-logout');
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          // native listener kept for instrumentation if needed
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to attach native listener to logout button', e);
+    }
+  }
+
   ngOnInit(): void {
     this.loadProducts();
+    // initialize current user from auth service/localStorage
+    this.currentUser = this.authService.getUsername();
 
     this.subscription = this.cartState.cartCount$.subscribe((count) => {
       this.cartCount = count;
       this.cdr.detectChanges();
+    });
+    // subscribe to whole cart map to update open cart view reactively and animate new items
+    this.cartState.cartMap$.subscribe((map) => {
+      if (!map) {
+        this.prevCartMap = null;
+        return;
+      }
+
+      // detect newly added or increased items by comparing with previous map
+      if (this.showCartPanel && this.prevCartMap) {
+        for (const [id, qty] of Object.entries(map)) {
+          const prevQty = this.prevCartMap[id] ?? 0;
+          if (qty > prevQty) {
+            // mark as recently added
+            this.recentlyAdded[id] = true;
+            // clear highlight after animation
+            setTimeout(() => {
+              delete this.recentlyAdded[id];
+              this.cdr.detectChanges();
+            }, 900);
+          }
+        }
+      }
+
+      if (map && this.showCartPanel) {
+        this.cartItems = Object.entries(map).map(([id, q]) => ({ productId: id, quantity: q, name: this.getProductName(id) }));
+        this.cdr.detectChanges();
+      }
+
+      // store for next comparison
+      this.prevCartMap = { ...map };
     });
 
     this.scrollListener = () => {
@@ -120,11 +173,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   loadProducts() {
-    const token = localStorage.getItem('sessionToken') ?? undefined;
+    const token = this.authService.getToken() ?? undefined;
     this.productService.listWithToken(token).subscribe({
-      next: (res: any) => {
+    next: (res: any) => {
         this.products = res;
-        console.log('Productos cargados:', this.products);
         this.initialLoad = false;
       },
       error: () => {
@@ -144,7 +196,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   loadCartCount() {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.authService.getToken();
     if (!token) {
       this.cartState.updateCartCount(0);
       return;
@@ -162,7 +214,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   refreshCart() {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.authService.getToken();
     if (token) {
       this.cartService.refreshCartCount(token);
     }
@@ -190,7 +242,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   loadCartItems() {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.authService.getToken();
     if (!token) return;
 
     this.cartService.getCartItems(token).subscribe({
@@ -210,7 +262,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   removeFromCart(productId: string) {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.authService.getToken();
     if (!token) return;
 
     this.cartService.removeFromCart(token, productId).subscribe({
@@ -222,6 +274,7 @@ export class AppComponent implements OnInit, OnDestroy {
         }));
         const count = this.cartService.getCartCount(cart);
         this.cartState.updateCartCount(count);
+        this.cartState.updateCartMap(cart);
         this.cdr.detectChanges();
       },
       error: () => {
@@ -239,10 +292,50 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   toggleLoginPanel() {
+    // toggle login panel
+    // ensure logout confirm modal is hidden when opening login panel
+    this.showLogoutConfirm = false;
     this.showLoginPanel = !this.showLoginPanel;
     this.loginError = '';
     this.cdr.detectChanges();
   }
+
+  openRegisterPanel() {
+    this.showRegisterPanel = true;
+    this.loginError = '';
+    this.cdr.detectChanges();
+  }
+
+  closeRegisterPanel() {
+    this.showRegisterPanel = false;
+    this.cdr.detectChanges();
+  }
+
+  async onRegisterSubmit() {
+    try {
+      await this.authService.register(this.username, this.password);
+      this.showRegisterPanel = false;
+      // after register, redirect to login panel
+      this.showLoginPanel = true;
+      this.loginMessage = 'Registro exitoso, por favor inicia sesión';
+      this.showLoginMessage = true;
+      if (this.loginMessageTimeout) clearTimeout(this.loginMessageTimeout);
+      this.loginMessageTimeout = setTimeout(() => {
+        this.showLoginMessage = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      if (err && err.status === 409) {
+        this.loginError = 'Usuario ya existe';
+      } else {
+        this.loginError = 'Error al registrar';
+      }
+      this.cdr.detectChanges();
+    }
+  }
+
+  
 
   closeLoginPanel() {
     this.showLoginPanel = false;
@@ -251,16 +344,19 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async onLoginSubmit() {
+    // handle login submit
     this.loginError = '';
     try {
       const res: any = await this.authService.login(this.username, this.password);
       if (res && res.authenticated) {
         this.showLoginPanel = false;
+        // set currentUser separately from the form username
+        this.currentUser = res.username ?? this.authService.getUsername();
         this.username = '';
         this.password = '';
 
         if (this.pendingProductId) {
-          const token = localStorage.getItem('sessionToken');
+          const token = this.authService.getToken();
           if (token) {
             this.cartService.addToCart(token, this.pendingProductId, 1).subscribe({
               next: () => {
@@ -285,14 +381,14 @@ export class AppComponent implements OnInit, OnDestroy {
         this.loginError = 'Credenciales inválidas';
         this.cdr.detectChanges();
       }
-    } catch (err) {
-      this.loginError = 'Error en login';
+      } catch (err) {
+      this.loginError = 'Usuario o contraseña incorrectos';
       this.cdr.detectChanges();
     }
   }
 
   addToCart(productId: string) {
-    const token = localStorage.getItem('sessionToken');
+    const token = this.authService.getToken();
 
     if (!token || token === 'null' || token === 'undefined') {
       window.alert('Debes iniciar sesión para añadir al carrito');
@@ -316,8 +412,7 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         if (err.status === 401) {
-          localStorage.removeItem('sessionToken');
-          localStorage.removeItem('username');
+          this.authService.clearSession();
           window.alert('Tu sesión ha expirado. Debes iniciar sesión nuevamente.');
           this.showLoginPanel = true;
           this.pendingProductId = productId;
@@ -328,11 +423,74 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('sessionToken');
+    return !!this.authService.getToken();
+  }
+
+  // Legacy handler left in place for compatibility. Do not call this directly.
+  async onLogout(_: boolean = false) {
+    // deprecated logout handler
+    return;
+  }
+
+  // Actual logout executor called only after explicit confirmation in the modal
+  private async executeLogout() {
+    try {
+      await this.authService.logout();
+    } catch (err) {
+      console.error('Logout request failed', err);
+    } finally {
+      this.authService.clearSession();
+      this.clearClientSessionUI();
+      // reload the page to reset app state fully
+      window.location.reload();
+    }
+  }
+
+  private clearClientSessionUI() {
+    this.currentUser = null;
+    this.cartItems = [];
+    this.showCartPanel = false;
+    this.showCartDropdown = false;
+    this.cartState.updateCartCount(0);
+    this.cdr.detectChanges();
+  }
+
+  // Logout confirmation modal control
+  showLogoutConfirm = false;
+  // Coming soon modal control
+  showComingSoon = false;
+
+  openLogoutConfirm(evt?: Event) {
+    if (evt) {
+      try { evt.stopPropagation(); (evt as any).preventDefault(); } catch(e) {}
+    }
+    this.showLogoutConfirm = true;
+    this.cdr.detectChanges();
+  }
+
+  closeLogoutConfirm() {
+    this.showLogoutConfirm = false;
+    this.cdr.detectChanges();
+  }
+
+  async confirmLogout() {
+    this.closeLogoutConfirm();
+    await this.executeLogout();
   }
 
   closeMessage() {
     this.showLoginMessage = false;
     this.cdr.detectChanges();
   }
+
+  // Provide a graceful fallback when an image fails to load
+  imageFallback(evt: Event) {
+    const img = evt.target as HTMLImageElement;
+    if (!img) return;
+    // replace with a tiny placeholder data URI or a bundled placeholder path
+    img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="100%" height="100%" fill="%231a73e8"/><text x="50%" y="50%" font-size="20" fill="white" dominant-baseline="middle" text-anchor="middle">Imagen no disponible</text></svg>';
+  }
+
+  // Reusable placeholder (same as used in imageFallback)
+  placeholderDataUri = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="100%" height="100%" fill="%231a73e8"/><text x="50%" y="50%" font-size="20" fill="white" dominant-baseline="middle" text-anchor="middle">Imagen no disponible</text></svg>';
 }

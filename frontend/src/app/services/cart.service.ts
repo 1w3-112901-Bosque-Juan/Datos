@@ -14,7 +14,7 @@ export class CartService {
   }
 
   addToCart(token: string, productId: string, quantity: number = 1) {
-    return this.api.post('/cart', { [productId]: quantity }, token);
+    return this.api.post('/cart', { [productId]: quantity }, token).pipe();
   }
 
   removeFromCart(token: string, productId: string) {
@@ -34,9 +34,12 @@ export class CartService {
       next: (cart: any) => {
         const count = this.getCartCount(cart);
         this.cartState.updateCartCount(count);
+        // also update map observable
+        this.cartState.updateCartMap(cart);
       },
       error: () => {
         this.cartState.updateCartCount(0);
+        this.cartState.updateCartMap(null);
       },
     });
   }

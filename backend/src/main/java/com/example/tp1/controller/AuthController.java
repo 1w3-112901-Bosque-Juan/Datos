@@ -4,11 +4,8 @@ import com.example.tp1.dto.AuthResponse;
 import com.example.tp1.dto.LoginRequest;
 import com.example.tp1.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -25,5 +22,25 @@ public class AuthController {
             return ResponseEntity.ok(new AuthResponse(true, token, req.getUsername()));
         }
         return ResponseEntity.status(401).body(new AuthResponse(false, null, null));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody LoginRequest req) {
+        boolean ok = authService.register(req.getUsername(), req.getPassword());
+        if (ok) return ResponseEntity.status(201).build();
+        return ResponseEntity.status(409).build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader(name = "X-Session-Token", required = false) String token) {
+        if (token != null) {
+            authService.logout(token);
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
     }
 }
