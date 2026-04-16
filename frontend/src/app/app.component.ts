@@ -19,6 +19,7 @@ export class AppComponent implements OnInit, OnDestroy {
   showCartDropdown = false;
   showCartPanel = false;
   showLoginPanel = false;
+  showRegisterPanel = false;
   cartItems: any[] = [];
   // track recently added items to animate highlight in the open cart
   recentlyAdded: { [productId: string]: boolean } = {};
@@ -297,6 +298,41 @@ export class AppComponent implements OnInit, OnDestroy {
     this.showLoginPanel = !this.showLoginPanel;
     this.loginError = '';
     this.cdr.detectChanges();
+  }
+
+  openRegisterPanel() {
+    this.showRegisterPanel = true;
+    this.loginError = '';
+    this.cdr.detectChanges();
+  }
+
+  closeRegisterPanel() {
+    this.showRegisterPanel = false;
+    this.cdr.detectChanges();
+  }
+
+  async onRegisterSubmit() {
+    try {
+      await this.authService.register(this.username, this.password);
+      this.showRegisterPanel = false;
+      // after register, redirect to login panel
+      this.showLoginPanel = true;
+      this.loginMessage = 'Registro exitoso, por favor inicia sesión';
+      this.showLoginMessage = true;
+      if (this.loginMessageTimeout) clearTimeout(this.loginMessageTimeout);
+      this.loginMessageTimeout = setTimeout(() => {
+        this.showLoginMessage = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      if (err && err.status === 409) {
+        this.loginError = 'Usuario ya existe';
+      } else {
+        this.loginError = 'Error al registrar';
+      }
+      this.cdr.detectChanges();
+    }
   }
 
   

@@ -24,6 +24,13 @@ public class AuthController {
         return ResponseEntity.status(401).body(new AuthResponse(false, null, null));
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody LoginRequest req) {
+        boolean ok = authService.register(req.getUsername(), req.getPassword());
+        if (ok) return ResponseEntity.status(201).build();
+        return ResponseEntity.status(409).build();
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader(name = "X-Session-Token", required = false) String token) {
         if (token != null) {

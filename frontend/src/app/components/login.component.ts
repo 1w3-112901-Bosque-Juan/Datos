@@ -39,8 +39,8 @@ export class LoginComponent {
       } else {
         this.error = 'Credenciales inválidas';
       }
-    } catch (err) {
-      this.error = 'Error en login';
+      } catch (err) {
+      this.error = 'Usuario o contraseña incorrectos';
     }
   }
 }

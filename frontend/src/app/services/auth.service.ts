@@ -20,6 +20,10 @@ export class AuthService {
     });
   }
 
+  register(username: string, password: string) {
+    return this.api.post('/auth/register', { username, password }).toPromise();
+  }
+
   getToken() {
     if (!this.sessionToken) this.sessionToken = localStorage.getItem('sessionToken');
     return this.sessionToken;

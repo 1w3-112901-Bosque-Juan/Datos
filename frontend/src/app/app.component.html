@@ -19,6 +19,7 @@
     <!-- Show Login if not logged, otherwise show username + Logout -->
     <ng-container *ngIf="!isLoggedIn(); else loggedTpl">
       <button type="button" class="nav-link" (click)="$event.stopPropagation(); toggleLoginPanel()">Login</button>
+      <button type="button" class="nav-link" (click)="$event.stopPropagation(); openRegisterPanel()">Register</button>
     </ng-container>
 
     <ng-template #loggedTpl>
@@ -82,6 +83,26 @@
       </div>
       <div class="login-error" *ngIf="loginError">{{ loginError }}</div>
       <button type="submit" class="btn-login">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Register Panel (Fixed) -->
+<div class="login-panel" [class.open]="showRegisterPanel">
+  <div class="login-panel-content">
+    <button class="close-btn" (click)="closeRegisterPanel()">×</button>
+    <h2>Registrar</h2>
+    <form (submit)="onRegisterSubmit()">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" [(ngModel)]="username" name="username" required />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" [(ngModel)]="password" name="password" required />
+      </div>
+      <div class="login-error" *ngIf="loginError">{{ loginError }}</div>
+      <button type="submit" class="btn-login">Registrar</button>
     </form>
   </div>
 </div>
